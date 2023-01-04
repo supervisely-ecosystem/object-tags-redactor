@@ -25,6 +25,7 @@ dataset_info = None
 if dataset_id is None:
     datasets = api.dataset.get_list(project_id)
     images = [image for dataset in datasets for image in api.image.get_list(dataset.id)]
+    total_images = len(images)
 else:
     dataset_info = api.dataset.get_info_by_id(dataset_id)
     images = api.image.get_list(dataset_id)
