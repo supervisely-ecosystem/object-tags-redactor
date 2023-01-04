@@ -1,0 +1,22 @@
+{
+  "release": { "version":"v1.0.0", "name":"init" },
+  "slug": "niko/object-tags-redactor",
+  "type": "app",
+  "version": "2.0.0",
+  "name": "Object Tags Redactor",
+  "description": "Edit tags of each object in image",
+  "categories": [
+    "data operations",
+    "images",
+    "annotation transformation"
+  ],
+  "entrypoint": "python -m uvicorn src.main:app --host 0.0.0.0 --port 8000",
+  "context_menu": {
+    "context_category": "Transform",
+    "target": [
+      "images_project",
+      "images_dataset"
+    ]
+  },
+  "headless": false
+}
