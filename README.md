@@ -1,8 +1,8 @@
-# Object Tags Redactor
+# Object Tags Editor
 
 # Overview
 
-This application allows to edit objects tags on image. User can iterate over images and objects in dataset or project and modify its tags.
+This application allows to edit tags of objects on images. User can iterate over images and objects in dataset or project and modify its tags.
 
 # How to Run
 
@@ -16,3 +16,5 @@ Add tags by checking the tag checkbox and modify tag value if needed.
 
 ## Step 4: Save tags
 Click on save button to save tags
+
+## Step 5: Stop the app

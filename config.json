@@ -3,7 +3,7 @@
   "slug": "niko/test-object-tags-redactor",
   "type": "app",
   "version": "2.0.0",
-  "name": "[test] Object Tags Redactor",
+  "name": "[test] Object tags editor",
   "description": "Edit tags of each object in image",
   "categories": [
     "data operations",
