@@ -9,6 +9,7 @@ from supervisely.app.widgets import (
     ProjectThumbnail,
     DatasetThumbnail,
     InputTag,
+    NotificationBox
 )
 import src.globals as g
 
@@ -41,16 +42,21 @@ object_selector_card = Card(
 
 # tags input card
 tag_inputs = [InputTag(tag_meta) for tag_meta in g.project_meta.tag_metas]
+disclaimer = NotificationBox(
+    title="Warning",
+    description="Objects will be modified in-place! Make sure you backed up your data.",
+    box_type="warning",
+)
 save_button = Button(text="Save tags")
 success_message = Text("Tags saved!", status="success")
 success_message.hide()
-save_card = Card(content=Flexbox(widgets=[save_button, success_message]))
-tags_container = Container(widgets=[*tag_inputs, save_card])
-tags_card = Card(content=tags_container)
+save_container = Container(widgets=[disclaimer, Flexbox(widgets=[save_button, success_message])])
+tags_container = Container(widgets=tag_inputs)
+tags_card = Card(content=Container(widgets=[tags_container, save_container], gap=40), title="Object tags")
 
 # labeled image card
 labeled_image = LabeledImage()
-labeled_image_card = Card(content=labeled_image)
+labeled_image_card = Card(content=labeled_image, title="Object preview")
 
 # main window
 main_window = Container(widgets=[labeled_image_card, tags_card], direction="horizontal", fractions=[1, 1])
@@ -121,7 +127,7 @@ def select_object(idx):
     g.current_object_idx = idx
     render_selected_object()
 
-@loading(object_buttons, labeled_image_card, tags_card, images_buttons)
+@loading(buttons, labeled_image_card, tags_card)
 def select_image(idx):
     g.current_image_idx = idx
     g.set_image()
