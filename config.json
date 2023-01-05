@@ -1,7 +1,7 @@
 {
   "type": "app",
   "version": "2.0.0",
-  "name": "Object Tags Redactor",
+  "name": "Object tags editor",
   "description": "Edit tags of each object in image",
   "categories": [
     "data operations",
