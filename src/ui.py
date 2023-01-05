@@ -142,8 +142,7 @@ def save_object_tags():
             if type(tag_value) is bool:
                 tag_value = None
             tag = sly.Tag(tm, tag_value)
-            updated_tags.add(tag)
-
+            updated_tags = updated_tags.add(tag)
     current_label = g.current_annotation.labels[g.current_object_idx]
     labels_after_current = g.current_annotation.labels[g.current_object_idx + 1 :]
     g.current_annotation = g.current_annotation.delete_label(current_label)
