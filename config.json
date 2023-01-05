@@ -1,6 +1,4 @@
 {
-  "release": { "version":"v1.0.0", "name":"init" },
-  "slug": "niko/object-tags-redactor",
   "type": "app",
   "version": "2.0.0",
   "name": "Object Tags Redactor",
