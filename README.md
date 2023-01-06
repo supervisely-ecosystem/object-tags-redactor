@@ -35,5 +35,5 @@ This application allows to edit tags of objects on images. User can iterate over
 
 ## Screenshot
 
-<img src="https://user-images.githubusercontent.com/115161827/211075659-22ae6942-e855-4acc-8c7f-111deb2cb682.png">
+<img src="https://user-images.githubusercontent.com/115161827/211086513-741d9cf0-01b6-44ee-9dc7-4e3257e7e758.png">
 
