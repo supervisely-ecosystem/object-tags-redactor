@@ -15,6 +15,7 @@ project_id = sly.env.project_id()
 project_meta_json = api.project.get_meta(project_id)
 project_meta = sly.ProjectMeta.from_json(project_meta_json)
 project_info = api.project.get_info_by_id(project_id)
+tag_metas = [tm for tm in project_meta.tag_metas if tm.applicable_to != sly.TagApplicableTo.IMAGES_ONLY]
 
 images = []
 total_images = 0
@@ -32,14 +33,19 @@ else:
     total_images = len(images)
 
 current_annotation = None
+objects = []
 total_objectss = 0
 current_object_idx = 0
 
 def set_image():
+    if len(images) == 0:
+        return
     global current_annotation
     global current_object_idx
+    global objects
     global total_objectss
     current_annotation = get_annotation()
+    objects = current_annotation.labels
     current_object_idx = 0
     total_objectss = len(current_annotation.labels)
 
