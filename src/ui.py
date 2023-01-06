@@ -22,13 +22,13 @@ else:
 thumbnail_card = Card(title="Input", content=thumbnail)
 
 # images buttons
-image_progress = Text(f"Image:  {g.current_image_idx + 1} / {g.total_images}")
+image_progress = Text(f"Image:  0 / 0")
 next_image_button = Button(text=">>")
 prev_image_button = Button(text="<<")
 images_buttons = Flexbox(widgets=[prev_image_button, image_progress, next_image_button])
 
 # objects buttons
-object_progress = Text(f"Obect: {g.current_object_idx + 1} / {g.total_objectss}")
+object_progress = Text(f"Obect: 0 / 0")
 next_object_btn = Button(text=">>")
 prev_object_btn = Button(text="<<")
 object_buttons = Flexbox(widgets=[prev_object_btn, object_progress, next_object_btn])
@@ -41,7 +41,9 @@ object_selector_card = Card(
 )
 
 # tags input card
-tag_inputs = [InputTag(tag_meta) for tag_meta in g.project_meta.tag_metas]
+tag_inputs = [InputTag(tag_meta) for tag_meta in g.tag_metas]
+for tag_input in tag_inputs:
+    tag_input.hide()
 disclaimer = NotificationBox(
     title="Warning",
     description="Objects will be modified in-place! Make sure you backed up your data.",
@@ -77,46 +79,61 @@ def loading(*components):
     return dec
 
 def render_image():
-    label = g.current_annotation.labels[g.current_object_idx]
-    label_id = label.to_json()["id"]
+    if len(g.objects) == 0:
+        object_id = None
+    else:
+        object = g.objects[g.current_object_idx]
+        object_id = object.to_json()["id"]
     image = g.images[g.current_image_idx]
     image_url = image.preview_url
     image_id = image.id
     
-    object_progress.set(
-        f"Object: {g.current_object_idx+1} / {g.total_objectss}", status="text"
-    )
     labeled_image.set(
         title=f"{image.name}",
         image_url=image_url,
         ann=g.current_annotation,
         image_id=image_id,
-        zoom_to=label_id,
+        zoom_to=object_id,
         zoom_factor=g.zoom_factor,
     )
 
 def render_tags():
-    label = g.current_annotation.labels[g.current_object_idx]
-    label_class = label.obj_class
+    if len(g.objects) == 0:
+        for ti in tag_inputs:
+            ti.hide()
+        success_message.hide()
+        return
 
-    for i, tm in enumerate(g.project_meta.tag_metas):
+    object = g.objects[g.current_object_idx]
+    object_class = object.obj_class
+
+    for i, tm in enumerate(g.tag_metas):
         if tm.applicable_to == sly.TagApplicableTo.OBJECTS_ONLY:
-            if label_class.name in tm.applicable_classes:
+            if object_class.name in tm.applicable_classes:
                 tag_inputs[i].show()
             else:
                 tag_inputs[i].hide()
         else:
             tag_inputs[i].show()
-        tag = label.tags.get(tm.name)
+        tag = object.tags.get(tm.name)
         tag_inputs[i].set(tag=tag)
 
     success_message.hide()
 
 def render_selected_object():
+    if len(g.objects) == 0:
+        object_number = 0
+    else:
+        object_number = g.current_object_idx + 1
+    object_progress.set(
+        f"Object: {object_number} / {g.total_objectss}", status="text"
+    )
     render_image()
     render_tags()
 
 def render_selected_image():
+    if len(g.images) == 0:
+        return  
     image_progress.set(
         f"Image: {g.current_image_idx + 1} / {g.total_images}", status="text"
     )
@@ -136,7 +153,7 @@ def select_image(idx):
 @save_button.click
 def save_object_tags():
     updated_tags = sly.TagCollection()
-    for i, tm in enumerate(g.project_meta.tag_metas):
+    for i, tm in enumerate(g.tag_metas):
         tag_value = tag_inputs[i].get_value()
         if tag_value is not None:
             if type(tag_value) is bool:
@@ -154,30 +171,30 @@ def save_object_tags():
     g.current_annotation = g.current_annotation.add_labels(labels_after_current)
     image_id = g.images[g.current_image_idx].id
     g.api.annotation.upload_ann(image_id, g.current_annotation)
-
-    select_object(g.current_object_idx)
+    g.objects = g.current_annotation.labels
+    render_tags()
     success_message.show()
 
 @next_object_btn.click
 def next_object():
-    if g.current_object_idx == g.total_objectss - 1:
+    if g.current_object_idx >= g.total_objectss - 1:
         return
     select_object(g.current_object_idx + 1)
 
 @prev_object_btn.click
 def prev_object():
-    if g.current_object_idx == 0:
+    if g.current_object_idx <= 0:
         return
     select_object(g.current_object_idx - 1)
 
 @next_image_button.click
 def next_image():
-    if g.current_image_idx == g.total_images - 1:
+    if g.current_image_idx >= g.total_images - 1:
         return
     select_image(g.current_image_idx + 1)
 
 @prev_image_button.click
 def prev_image():
-    if g.current_image_idx == 0:
+    if g.current_image_idx <= 0:
         return
     select_image(g.current_image_idx - 1)
