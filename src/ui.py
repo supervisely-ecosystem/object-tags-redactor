@@ -46,7 +46,7 @@ for tag_input in tag_inputs:
     tag_input.hide()
 disclaimer = NotificationBox(
     title="Warning",
-    description="Objects will be modified in-place! Make sure you backed up your data.",
+    description="Objects will be modified in-place!",
     box_type="warning",
 )
 save_button = Button(text="Save tags")
