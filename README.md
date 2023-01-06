@@ -1,20 +1,40 @@
-# Object Tags Editor
+<div align="center" markdown>
+<img src="https://user-images.githubusercontent.com/115161827/211063080-95d8fc82-7549-4859-97fd-361bcb5e0b20.png"/>
+
+
+# Object tags editor
+
+<p align="center">
+  <a href="#Overview">Overview</a> •
+  <a href="#How-To-Run">How To Run</a> 
+</p>
+
+[![](https://img.shields.io/badge/supervisely-ecosystem-brightgreen)](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/bind-nested-objects-into-groups)
+[![](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://supervise.ly/slack)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/supervisely-ecosystem/bind-nested-objects-into-groups)
+[![views](https://app.supervise.ly/img/badges/views/supervisely-ecosystem/bind-nested-objects-into-groups)](https://supervise.ly)
+[![runs](https://app.supervise.ly/img/badges/runs/supervisely-ecosystem/bind-nested-objects-into-groups)](https://supervise.ly)
+
+</div>
 
 # Overview
+
 
 This application allows to edit tags of objects on images. User can iterate over images and objects in dataset or project and modify its tags.
 
 # How to Run
 
-## Step 1: Run from context menu of project / dataset
+0. Go to the list of projects in your Workspace
 
-## Step 2: Select Image and Object
-Select Image and Object you want to edit using arrow buttons. Selected object will be shown in "Object preview" card below
+1. Open the context menu of a project and run the app
 
-## Step 3: Modify object tags
-Add tags by checking the tag checkbox and modify tag value if needed.
+<img src="xxx">
 
-## Step 4: Save tags
-Click on save button to save tags
+2. Select image and object, modify objects tags and save tags
 
-## Step 5: Stop the app
+3. Stop the application in the workspace tasks
+
+## Screenshot
+
+<img src="xxx">
+
