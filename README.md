@@ -26,7 +26,7 @@ This application allows to edit tags of objects on images. User can iterate over
 
 0. Go to the list of projects in your Workspace
 
-1. Open the context menu of a project and run the app
+1. Open the context menu of a project / dataset and run the app
 
 <img src="xxx">
 
