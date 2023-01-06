@@ -1,5 +1,5 @@
 <div align="center" markdown>
-<img src="https://user-images.githubusercontent.com/115161827/211073053-60d8c404-faa4-4d30-8c47-5b9e5141c62d.png"/>
+<img src="https://user-images.githubusercontent.com/115161827/211074304-491b8e19-1639-406f-9949-b0ed68da0186.png"/>
 
 
 # Object tags editor
