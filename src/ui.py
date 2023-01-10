@@ -100,11 +100,12 @@ def render_image():
     image = g.images[g.current_image_idx]
     image_url = image.preview_url
     image_id = image.id
+    show_ann = g.current_annotation.clone(labels=g.objects)
     
     labeled_image.set(
         title=f"{image.name}",
         image_url=image_url,
-        ann=g.current_annotation,
+        ann=show_ann,
         image_id=image_id,
         zoom_to=object_id,
         zoom_factor=g.zoom_factor,
@@ -165,16 +166,21 @@ def select_image(idx):
 
 @save_button.click
 def save_object_tags():
+    if g.total_objectss == 0:
+        return
+    if len([ti for ti in tag_inputs if not ti.is_hidden()]) == 0:
+        return
+
     updated_tags = sly.TagCollection()
-    for i, tm in enumerate(g.tag_metas):
-        tag_value = tag_inputs[i].get_value()
-        if tag_value is not None:
-            if type(tag_value) is bool:
-                tag_value = None
-            tag = sly.Tag(tm, tag_value)
+    for tag_input in tag_inputs:
+        tag = tag_input.get_tag()
+        if tag is not None:
             updated_tags = updated_tags.add(tag)
-    current_label = g.current_annotation.labels[g.current_object_idx]
-    labels_after_current = g.current_annotation.labels[g.current_object_idx + 1 :]
+    
+    current_label = g.objects[g.current_object_idx]
+    for i, label in enumerate(g.current_annotation.labels):
+        if label == current_label:
+            labels_after_current = g.current_annotation.labels[i+1:]
     g.current_annotation = g.current_annotation.delete_label(current_label)
     for label in labels_after_current:
         g.current_annotation = g.current_annotation.delete_label(label)
@@ -184,7 +190,7 @@ def save_object_tags():
     g.current_annotation = g.current_annotation.add_labels(labels_after_current)
     image_id = g.images[g.current_image_idx].id
     g.api.annotation.upload_ann(image_id, g.current_annotation)
-    g.objects = g.current_annotation.labels
+    g.objects = g.filter_labels(g.current_annotation.labels)
     render_tags()
     success_message.show()
 

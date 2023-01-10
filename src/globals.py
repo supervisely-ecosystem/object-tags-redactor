@@ -1,4 +1,5 @@
 import os
+from typing import List
 from dotenv import load_dotenv
 import supervisely as sly
 
@@ -47,16 +48,15 @@ def set_image():
     global objects
     global total_objectss
     current_annotation = get_annotation()
-    objects = current_annotation.labels
+    objects = filter_labels(current_annotation.labels)
     current_object_idx = 0
-    total_objectss = len(current_annotation.labels)
+    total_objectss = len(objects)
 
 
 def get_annotation():
     image_id = images[current_image_idx].id
     ann_json = api.annotation.download_json(image_id)
     ann = sly.Annotation.from_json(ann_json, project_meta)
-    ann = filter_labels(ann)
     return ann
 
 
@@ -72,14 +72,10 @@ def is_selected_class(class_name: str):
         return True
     return False
 
-def filter_labels(ann: sly.Annotation):
-    labels = [
+def filter_labels(labels :List[sly.Label]):
+    return [
         label
-        for label in ann.labels
+        for label in labels
         if is_selected_class(label.obj_class.name) and
         is_permitted_geometry(label.obj_class.geometry_type)
     ]
-    for label in ann.labels:
-        ann = ann.delete_label(label)
-    ann = ann.add_labels(labels)
-    return ann
