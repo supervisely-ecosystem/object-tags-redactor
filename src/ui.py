@@ -122,7 +122,7 @@ def render_tags():
 
     for i, tm in enumerate(g.tag_metas):
         if tm.applicable_to == sly.TagApplicableTo.OBJECTS_ONLY:
-            if object_class.name in tm.applicable_classes:
+            if len(tm.applicable_classes) == 0 or object_class.name in tm.applicable_classes:
                 tag_inputs[i].show()
             else:
                 tag_inputs[i].hide()
