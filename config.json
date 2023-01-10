@@ -1,5 +1,5 @@
 {
-  "release": { "version":"v1.0.16", "name":"init" },
+  "release": { "version":"v1.0.17", "name":"init" },
   "slug": "niko/test-object-tags-redactor",
   "type": "app",
   "version": "2.0.0",
