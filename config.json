@@ -5,6 +5,9 @@
   "version": "2.0.0",
   "name": "[test] Object tags editor",
   "description": "Edit tags of each object in image",
+  "icon": "https://user-images.githubusercontent.com/115161827/211073191-4a8d5728-6f12-48b7-aa39-ac3fd8cb3f61.jpg",
+  "icon_cover": true,
+  "poster": "https://user-images.githubusercontent.com/115161827/211074304-491b8e19-1639-406f-9949-b0ed68da0186.png",
   "categories": [
     "data operations",
     "images",

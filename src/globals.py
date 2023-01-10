@@ -4,6 +4,7 @@ import supervisely as sly
 
 
 zoom_factor = 1.2
+exclude_geometries = [sly.Polyline]
 
 # for convenient debug, has no effect in production
 if sly.utils.is_development():
@@ -16,6 +17,7 @@ project_meta_json = api.project.get_meta(project_id)
 project_meta = sly.ProjectMeta.from_json(project_meta_json)
 project_info = api.project.get_info_by_id(project_id)
 tag_metas = [tm for tm in project_meta.tag_metas if tm.applicable_to != sly.TagApplicableTo.IMAGES_ONLY]
+selected_classes = []
 
 images = []
 total_images = 0
@@ -58,11 +60,24 @@ def get_annotation():
     return ann
 
 
-def filter_labels(ann):
+def is_permitted_geometry(geometry_type):
+    if geometry_type in exclude_geometries:
+        return False
+    return True
+
+def is_selected_class(class_name: str):
+    if len(selected_classes) == 0:
+        return True
+    if class_name in selected_classes:
+        return True
+    return False
+
+def filter_labels(ann: sly.Annotation):
     labels = [
         label
         for label in ann.labels
-        if not label.obj_class.geometry_type is sly.Polyline
+        if is_selected_class(label.obj_class.name) and
+        is_permitted_geometry(label.obj_class.geometry_type)
     ]
     for label in ann.labels:
         ann = ann.delete_label(label)

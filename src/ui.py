@@ -9,7 +9,8 @@ from supervisely.app.widgets import (
     ProjectThumbnail,
     DatasetThumbnail,
     InputTag,
-    NotificationBox
+    NotificationBox,
+    ClassesTable
 )
 import src.globals as g
 
@@ -20,6 +21,18 @@ if g.dataset_id is None:
 else:
     thumbnail = DatasetThumbnail(g.project_info, g.dataset_info)
 thumbnail_card = Card(title="Input", content=thumbnail)
+
+# classes selector
+classes_selector = ClassesTable(project_id = g.project_id)
+select_classes_button = Button("Select")
+classes_selector_card = Card(title="Select Classes", content=Container(
+    widgets=[classes_selector, select_classes_button]
+))
+
+@select_classes_button.click
+def select_classes():
+    g.selected_classes = classes_selector.get_selected_classes()
+    select_image(g.current_image_idx)
 
 # images buttons
 image_progress = Text(f"Image:  0 / 0")
@@ -46,7 +59,7 @@ for tag_input in tag_inputs:
     tag_input.hide()
 disclaimer = NotificationBox(
     title="Warning",
-    description="Objects will be modified in-place! Make sure you backed up your data.",
+    description="Objects will be modified in-place!",
     box_type="warning",
 )
 save_button = Button(text="Save tags")
