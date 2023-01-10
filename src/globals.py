@@ -5,7 +5,7 @@ import supervisely as sly
 
 
 zoom_factor = 1.2
-exclude_geometries = [sly.Polyline]
+exclude_geometries = [sly.Polyline.geometry_name()]
 
 # for convenient debug, has no effect in production
 if sly.utils.is_development():
@@ -61,6 +61,9 @@ def get_annotation():
 
 
 def is_permitted_geometry(geometry_type):
+    print(geometry_type)
+    print(exclude_geometries[0])
+    print(geometry_type == exclude_geometries[0])
     if geometry_type in exclude_geometries:
         return False
     return True
@@ -77,5 +80,5 @@ def filter_labels(labels :List[sly.Label]):
         label
         for label in labels
         if is_selected_class(label.obj_class.name) and
-        is_permitted_geometry(label.obj_class.geometry_type)
+        is_permitted_geometry(label.geometry.geometry_name())
     ]
