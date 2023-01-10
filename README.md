@@ -23,15 +23,17 @@ This application allows to edit tags of objects on images. User can iterate over
 
 # How to Run
 
-0. Go to the list of projects in your Workspace
+0. Add object tags to the project
 
-1. Open the context menu of a project / dataset and run the app
+1. Go to the list of projects in your Workspace
+
+2. Open the context menu of a project / dataset and run the app
 
 <img src="https://user-images.githubusercontent.com/115161827/211083873-9881fd4d-dbfc-44bb-8e36-d65fc75df897.gif">
 
-2. Select image and object, modify objects tags and save tags
+3. Select image and object, modify objects tags and save tags
 
-3. Stop the application in the workspace tasks
+4. Stop the application in the workspace tasks
 
 ## Screenshot
 
