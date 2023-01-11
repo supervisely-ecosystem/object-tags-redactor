@@ -13,6 +13,8 @@ if sly.utils.is_development():
     load_dotenv(os.path.expanduser("~/supervisely.env"))
 
 api = sly.Api()
+team_id = sly.env.team_id()
+workspace_id = sly.env.workspace_id()
 project_id = sly.env.project_id()
 project_meta_json = api.project.get_meta(project_id)
 project_meta = sly.ProjectMeta.from_json(project_meta_json)
@@ -37,7 +39,7 @@ else:
 
 current_annotation = None
 objects = []
-total_objectss = 0
+total_objects = 0
 current_object_idx = 0
 
 def set_image():
@@ -46,11 +48,11 @@ def set_image():
     global current_annotation
     global current_object_idx
     global objects
-    global total_objectss
+    global total_objects
     current_annotation = get_annotation()
     objects = filter_labels(current_annotation.labels)
     current_object_idx = 0
-    total_objectss = len(objects)
+    total_objects = len(objects)
 
 
 def get_annotation():
@@ -61,9 +63,6 @@ def get_annotation():
 
 
 def is_permitted_geometry(geometry_type):
-    print(geometry_type)
-    print(exclude_geometries[0])
-    print(geometry_type == exclude_geometries[0])
     if geometry_type in exclude_geometries:
         return False
     return True

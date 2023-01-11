@@ -65,7 +65,9 @@ disclaimer = NotificationBox(
 save_button = Button(text="Save tags")
 success_message = Text("Tags saved!", status="success")
 success_message.hide()
-save_container = Container(widgets=[disclaimer, Flexbox(widgets=[save_button, success_message])])
+save_and_next_button = Button(text="Save and next")
+
+save_container = Container(widgets=[disclaimer, Flexbox(widgets=[save_button, save_and_next_button, success_message])])
 tags_container = Container(widgets=tag_inputs)
 tags_card = Card(content=Container(widgets=[tags_container, save_container], gap=40), title="Object tags")
 
@@ -101,7 +103,6 @@ def render_image():
     image_url = image.preview_url
     image_id = image.id
     show_ann = g.current_annotation.clone(labels=g.objects)
-    
     labeled_image.set(
         title=f"{image.name}",
         image_url=image_url,
@@ -140,7 +141,7 @@ def render_selected_object():
     else:
         object_number = g.current_object_idx + 1
     object_progress.set(
-        f"Object: {object_number} / {g.total_objectss}", status="text"
+        f"Object: {object_number} / {g.total_objects}", status="text"
     )
     render_image()
     render_tags()
@@ -166,7 +167,7 @@ def select_image(idx):
 
 @save_button.click
 def save_object_tags():
-    if g.total_objectss == 0:
+    if g.total_objects == 0:
         return
     if len([ti for ti in tag_inputs if not ti.is_hidden()]) == 0:
         return
@@ -177,10 +178,12 @@ def save_object_tags():
         if tag is not None:
             updated_tags = updated_tags.add(tag)
     
+    # this is needed to keep current order of objects
     current_label = g.objects[g.current_object_idx]
     for i, label in enumerate(g.current_annotation.labels):
         if label == current_label:
             labels_after_current = g.current_annotation.labels[i+1:]
+            break
     g.current_annotation = g.current_annotation.delete_label(current_label)
     for label in labels_after_current:
         g.current_annotation = g.current_annotation.delete_label(label)
@@ -188,6 +191,7 @@ def save_object_tags():
         current_label.clone(tags=updated_tags)
     )
     g.current_annotation = g.current_annotation.add_labels(labels_after_current)
+    
     image_id = g.images[g.current_image_idx].id
     g.api.annotation.upload_ann(image_id, g.current_annotation)
     g.objects = g.filter_labels(g.current_annotation.labels)
@@ -196,13 +200,16 @@ def save_object_tags():
 
 @next_object_btn.click
 def next_object():
-    if g.current_object_idx >= g.total_objectss - 1:
+    if g.current_object_idx >= g.total_objects - 1:
+        next_image()
         return
     select_object(g.current_object_idx + 1)
 
 @prev_object_btn.click
 def prev_object():
     if g.current_object_idx <= 0:
+        prev_image()
+        select_object(g.total_objects - 1)
         return
     select_object(g.current_object_idx - 1)
 
@@ -217,3 +224,8 @@ def prev_image():
     if g.current_image_idx <= 0:
         return
     select_image(g.current_image_idx - 1)
+
+@save_and_next_button.click
+def save_tags_and_next_obj():
+    save_object_tags()
+    next_object()
