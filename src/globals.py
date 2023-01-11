@@ -19,7 +19,11 @@ project_id = sly.env.project_id()
 project_meta_json = api.project.get_meta(project_id)
 project_meta = sly.ProjectMeta.from_json(project_meta_json)
 project_info = api.project.get_info_by_id(project_id)
-tag_metas = [tm for tm in project_meta.tag_metas if tm.applicable_to != sly.TagApplicableTo.IMAGES_ONLY]
+tag_metas = [
+    tm
+    for tm in project_meta.tag_metas
+    if tm.applicable_to != sly.TagApplicableTo.IMAGES_ONLY
+]
 selected_classes = []
 
 images = []
@@ -41,6 +45,7 @@ current_annotation = None
 objects = []
 total_objects = 0
 current_object_idx = 0
+
 
 def set_image():
     if len(images) == 0:
@@ -67,6 +72,7 @@ def is_permitted_geometry(geometry_type):
         return False
     return True
 
+
 def is_selected_class(class_name: str):
     if len(selected_classes) == 0:
         return True
@@ -74,10 +80,11 @@ def is_selected_class(class_name: str):
         return True
     return False
 
-def filter_labels(labels :List[sly.Label]):
+
+def filter_labels(labels: List[sly.Label]):
     return [
         label
         for label in labels
-        if is_selected_class(label.obj_class.name) and
-        is_permitted_geometry(label.geometry.geometry_name())
+        if is_selected_class(label.obj_class.name)
+        and is_permitted_geometry(label.geometry.geometry_name())
     ]

@@ -26,38 +26,41 @@ else:
 thumbnail_card = Card(title="Input", content=thumbnail)
 
 # classes selector
-classes_selector = ClassesTable(project_id = g.project_id)
+classes_selector = ClassesTable(project_id=g.project_id)
 select_classes_button = Button("Select")
-classes_selector_card = Card(title="Select Classes", content=Container(
-    widgets=[classes_selector, select_classes_button]
-))
+classes_selector_card = Card(
+    title="Select Classes",
+    content=Container(widgets=[classes_selector, select_classes_button]),
+)
+
 
 @select_classes_button.click
 def select_classes():
     g.selected_classes = classes_selector.get_selected_classes()
     select_image(g.current_image_idx)
 
+
 # images buttons
 input_image_number = InputNumber(min=1, max=g.total_images)
 select_image_button = Button("Select")
-image_selector = Field(title="Select image", content=Flexbox(widgets=[input_image_number, select_image_button]))
+image_selector = Field(
+    title="Select image",
+    content=Flexbox(widgets=[input_image_number, select_image_button]),
+)
 image_progress = Text(f"Image:  0 / 0")
-next_image_button = Button(text="",  icon="zmdi zmdi-arrow-right")
-prev_image_button = Button(text="",  icon="zmdi zmdi-arrow-left")
+next_image_button = Button(text="", icon="zmdi zmdi-arrow-right")
+prev_image_button = Button(text="", icon="zmdi zmdi-arrow-left")
 images_buttons = Flexbox(widgets=[prev_image_button, image_progress, next_image_button])
 
 # objects buttons
 object_progress = Text(f"Obect: 0 / 0")
-next_object_btn = Button(text="",  icon="zmdi zmdi-arrow-right")
-prev_object_btn = Button(text="",  icon="zmdi zmdi-arrow-left")
+next_object_btn = Button(text="", icon="zmdi zmdi-arrow-right")
+prev_object_btn = Button(text="", icon="zmdi zmdi-arrow-left")
 object_buttons = Flexbox(widgets=[prev_object_btn, object_progress, next_object_btn])
 
 # object selector card
 buttons = Container(widgets=[image_selector, images_buttons, object_buttons])
-object_selector_card = Card(
-    content=Container(widgets=[buttons]),
-    title="Select Object"
-)
+object_selector_card = Card(content=Container(widgets=[buttons]), title="Select Object")
 
 # tags input card
 tag_inputs = [InputTag(tag_meta) for tag_meta in g.tag_metas]
@@ -73,17 +76,28 @@ success_message = Text("Tags saved!", status="success")
 success_message.hide()
 save_and_next_button = Button(text="Save and next")
 
-save_container = Container(widgets=[disclaimer, Flexbox(widgets=[save_button, save_and_next_button, success_message])])
+save_container = Container(
+    widgets=[
+        disclaimer,
+        Flexbox(widgets=[save_button, save_and_next_button, success_message]),
+    ]
+)
 tags_container = Container(widgets=tag_inputs)
-tags_card = Card(content=Container(widgets=[tags_container, save_container], gap=40), title="Object tags")
+tags_card = Card(
+    content=Container(widgets=[tags_container, save_container], gap=40),
+    title="Object tags",
+)
 
 # labeled image card
 labeled_image = LabeledImage()
 labeled_image_card = Card(content=labeled_image, title="Object preview")
 
 # main window
-main_window = Container(widgets=[labeled_image_card, tags_card], direction="horizontal", fractions=[1, 1])
+main_window = Container(
+    widgets=[labeled_image_card, tags_card], direction="horizontal", fractions=[1, 1]
+)
 main_window_card = Card(title="Edit Tags", content=main_window)
+
 
 def loading(*components):
     def dec(func):
@@ -99,16 +113,25 @@ def loading(*components):
 
     return dec
 
+
 def render_image():
     if len(g.objects) == 0:
         object_id = None
+        show_labels = []
     else:
         object = g.objects[g.current_object_idx]
         object_id = object.to_json()["id"]
+        show_labels = []
+        for label in g.current_annotation.labels:
+            if (
+                object.binding_key is not None
+                and label.binding_key == object.binding_key
+            ) or label.to_json()["id"] == object_id:
+                show_labels.append(label)
     image = g.images[g.current_image_idx]
     image_url = image.preview_url
     image_id = image.id
-    show_ann = g.current_annotation.clone(labels=g.objects)
+    show_ann = g.current_annotation.clone(labels=show_labels)
     image_labeling_url = f"{g.api.server_address}/app/images/{g.team_id}/{g.workspace_id}/{g.project_id}/{g.dataset_id}#image-{image.id}"
     labeled_image.set(
         title=f"{image.name}",
@@ -119,6 +142,7 @@ def render_image():
         zoom_factor=g.zoom_factor,
         title_url=image_labeling_url,
     )
+
 
 def render_tags():
     if len(g.objects) == 0:
@@ -132,7 +156,10 @@ def render_tags():
 
     for i, tm in enumerate(g.tag_metas):
         if tm.applicable_to == sly.TagApplicableTo.OBJECTS_ONLY:
-            if len(tm.applicable_classes) == 0 or object_class.name in tm.applicable_classes:
+            if (
+                len(tm.applicable_classes) == 0
+                or object_class.name in tm.applicable_classes
+            ):
                 tag_inputs[i].show()
             else:
                 tag_inputs[i].hide()
@@ -143,35 +170,38 @@ def render_tags():
 
     success_message.hide()
 
+
 def render_selected_object():
     if len(g.objects) == 0:
         object_number = 0
     else:
         object_number = g.current_object_idx + 1
-    object_progress.set(
-        f"Object: {object_number} / {g.total_objects}", status="text"
-    )
+    object_progress.set(f"Object: {object_number} / {g.total_objects}", status="text")
     render_image()
     render_tags()
 
+
 def render_selected_image():
     if len(g.images) == 0:
-        return  
+        return
     image_progress.set(
         f"Image: {g.current_image_idx + 1} / {g.total_images}", status="text"
     )
     render_selected_object()
+
 
 @loading(object_buttons, labeled_image_card, tags_card)
 def select_object(idx):
     g.current_object_idx = idx
     render_selected_object()
 
+
 @loading(buttons, labeled_image_card, tags_card)
 def select_image(idx):
     g.current_image_idx = idx
     g.set_image()
     render_selected_image()
+
 
 @save_button.click
 def save_object_tags():
@@ -185,12 +215,12 @@ def save_object_tags():
         tag = tag_input.get_tag()
         if tag is not None:
             updated_tags = updated_tags.add(tag)
-    
+
     # this is needed to keep current order of objects
     current_label = g.objects[g.current_object_idx]
     for i, label in enumerate(g.current_annotation.labels):
         if label == current_label:
-            labels_after_current = g.current_annotation.labels[i+1:]
+            labels_after_current = g.current_annotation.labels[i + 1 :]
             break
     g.current_annotation = g.current_annotation.delete_label(current_label)
     for label in labels_after_current:
@@ -199,12 +229,13 @@ def save_object_tags():
         current_label.clone(tags=updated_tags)
     )
     g.current_annotation = g.current_annotation.add_labels(labels_after_current)
-    
+
     image_id = g.images[g.current_image_idx].id
     g.api.annotation.upload_ann(image_id, g.current_annotation)
     g.objects = g.filter_labels(g.current_annotation.labels)
     render_tags()
     success_message.show()
+
 
 @next_object_btn.click
 def next_object():
@@ -212,6 +243,7 @@ def next_object():
         next_image()
         return
     select_object(g.current_object_idx + 1)
+
 
 @prev_object_btn.click
 def prev_object():
@@ -221,11 +253,13 @@ def prev_object():
         return
     select_object(g.current_object_idx - 1)
 
+
 @next_image_button.click
 def next_image():
     if g.current_image_idx >= g.total_images - 1:
         return
     select_image(g.current_image_idx + 1)
+
 
 @prev_image_button.click
 def prev_image():
@@ -233,10 +267,12 @@ def prev_image():
         return
     select_image(g.current_image_idx - 1)
 
+
 @save_and_next_button.click
 def save_tags_and_next_obj():
     save_object_tags()
     next_object()
+
 
 @select_image_button.click
 def go_to_image():
