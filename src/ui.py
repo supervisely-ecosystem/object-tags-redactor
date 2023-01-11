@@ -132,7 +132,7 @@ def render_image():
     image_url = image.preview_url
     image_id = image.id
     show_ann = g.current_annotation.clone(labels=show_labels)
-    image_labeling_url = f"{g.api.server_address}/app/images/{g.team_id}/{g.workspace_id}/{g.project_id}/{g.dataset_id}#image-{image.id}"
+    image_labeling_url = f"{g.api.server_address}/app/images/{g.team_id}/{g.workspace_id}/{g.project_id}/{image.dataset_id}#image-{image.id}"
     labeled_image.set(
         title=f"{image.name}",
         image_url=image_url,
