@@ -10,7 +10,10 @@ from supervisely.app.widgets import (
     DatasetThumbnail,
     InputTag,
     NotificationBox,
-    ClassesTable
+    ClassesTable,
+    Field,
+    InputNumber,
+    Flexbox,
 )
 import src.globals as g
 
@@ -35,19 +38,22 @@ def select_classes():
     select_image(g.current_image_idx)
 
 # images buttons
+input_image_number = InputNumber(min=1, max=g.total_images)
+select_image_button = Button("Select")
+image_selector = Field(title="Select image", content=Flexbox(widgets=[input_image_number, select_image_button]))
 image_progress = Text(f"Image:  0 / 0")
-next_image_button = Button(text=">>")
-prev_image_button = Button(text="<<")
+next_image_button = Button(text="",  icon="zmdi zmdi-arrow-right")
+prev_image_button = Button(text="",  icon="zmdi zmdi-arrow-left")
 images_buttons = Flexbox(widgets=[prev_image_button, image_progress, next_image_button])
 
 # objects buttons
 object_progress = Text(f"Obect: 0 / 0")
-next_object_btn = Button(text=">>")
-prev_object_btn = Button(text="<<")
+next_object_btn = Button(text="",  icon="zmdi zmdi-arrow-right")
+prev_object_btn = Button(text="",  icon="zmdi zmdi-arrow-left")
 object_buttons = Flexbox(widgets=[prev_object_btn, object_progress, next_object_btn])
 
 # object selector card
-buttons = Container(widgets=[images_buttons, object_buttons])
+buttons = Container(widgets=[image_selector, images_buttons, object_buttons])
 object_selector_card = Card(
     content=Container(widgets=[buttons]),
     title="Select Object"
@@ -231,3 +237,8 @@ def prev_image():
 def save_tags_and_next_obj():
     save_object_tags()
     next_object()
+
+@select_image_button.click
+def go_to_image():
+    img_number = input_image_number.get_value() - 1
+    select_image(img_number)
