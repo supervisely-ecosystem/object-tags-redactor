@@ -1,4 +1,5 @@
 import supervisely as sly
+from supervisely.app.content import DataJson, StateJson
 from supervisely.app.widgets import (
     Container,
     LabeledImage,
@@ -14,6 +15,7 @@ from supervisely.app.widgets import (
     Field,
     InputNumber,
     Flexbox,
+    Progress
 )
 import src.globals as g
 
@@ -57,9 +59,11 @@ object_progress = Text(f"Obect: 0 / 0")
 next_object_btn = Button(text="", icon="zmdi zmdi-arrow-right")
 prev_object_btn = Button(text="", icon="zmdi zmdi-arrow-left")
 object_buttons = Flexbox(widgets=[prev_object_btn, object_progress, next_object_btn])
+total_image_progress = Progress(message="Images progress", hide_on_finish=False)
+pbar = total_image_progress(total=len(g.images), message="Images progress")
 
 # object selector card
-buttons = Container(widgets=[image_selector, images_buttons, object_buttons])
+buttons = Container(widgets=[image_selector, images_buttons, object_buttons, total_image_progress])
 object_selector_card = Card(content=Container(widgets=[buttons]), title="Select Object")
 
 # tags input card
@@ -187,6 +191,10 @@ def render_selected_image():
     image_progress.set(
         f"Image: {g.current_image_idx + 1} / {g.total_images}", status="text"
     )
+    pbar.n = g.current_image_idx + 1
+    pbar.refresh()
+    DataJson()[str(total_image_progress.widget_id)]["status"] = None
+    DataJson().send_changes()
     render_selected_object()
 
 
