@@ -14,11 +14,15 @@ if sly.utils.is_development():
 
 api = sly.Api()
 team_id = sly.env.team_id()
+user_info = api.user.get_my_info()
+data_dir = sly.app.get_data_dir()
 workspace_id = sly.env.workspace_id()
 project_id = sly.env.project_id()
 project_meta_json = api.project.get_meta(project_id)
 project_meta = sly.ProjectMeta.from_json(project_meta_json)
 project_info = api.project.get_info_by_id(project_id)
+app_path = os.path.join(data_dir, "object-tags-editor-files")
+pr_path = os.path.join(app_path, f"project-{project_info.id}")
 tag_metas = [
     tm
     for tm in project_meta.tag_metas

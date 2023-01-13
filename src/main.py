@@ -15,3 +15,4 @@ layout = Container(
 
 app = sly.Application(layout=layout)
 ui.select_image(g.current_image_idx)
+ui.load_templates()

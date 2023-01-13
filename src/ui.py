@@ -1,5 +1,8 @@
+import json
+import os
+from pathlib import Path
 import supervisely as sly
-from supervisely.app.content import DataJson, StateJson
+from supervisely.app.content import DataJson
 from supervisely.app.widgets import (
     Container,
     LabeledImage,
@@ -15,9 +18,34 @@ from supervisely.app.widgets import (
     Field,
     InputNumber,
     Flexbox,
-    Progress
+    Progress,
+    Input,
+    Select,
 )
 import src.globals as g
+
+
+def loading(*components):
+    def dec(func):
+        def inner(*args, **kwargs):
+            for component in components:
+                component.loading = True
+            result = func(*args, **kwargs)
+            for component in components:
+                component.loading = False
+            return result
+
+        return inner
+
+    return dec
+
+def _is_applicable(tag, label):
+    if len(tag.meta.applicable_classes) == 0:
+        return True
+    if label.obj_class.name in tag.meta.applicable_classes:
+        return True
+    return False
+
 
 # thumbnail
 thumbnail = None
@@ -32,7 +60,7 @@ classes_selector = ClassesTable(project_id=g.project_id)
 select_classes_button = Button("Select")
 classes_selector_card = Card(
     title="Select Classes",
-    description="Select classes of objects you want to modify"
+    description="Select classes of objects you want to modify",
     content=Container(widgets=[classes_selector, select_classes_button]),
 )
 
@@ -64,10 +92,53 @@ total_image_progress = Progress(message="Images progress", hide_on_finish=False)
 pbar = total_image_progress(total=len(g.images), message="Images progress")
 
 # object selector card
-buttons = Container(widgets=[image_selector, images_buttons, object_buttons, total_image_progress])
+buttons = Container(
+    widgets=[image_selector, images_buttons, object_buttons, total_image_progress]
+)
 object_selector_card = Card(content=Container(widgets=[buttons]), title="Select Object")
 
 # tags input card
+# templates
+templates_selector = Select([])
+
+@loading(templates_selector)
+def load_templates():
+    remote_filepath = Path(g.pr_path).joinpath("templates.json").as_posix()
+    exists = g.api.file.exists(g.team_id, "/" + remote_filepath)
+    if not exists:
+        return
+    g.api.file.download(g.team_id, "/" + remote_filepath, remote_filepath)
+    with open(remote_filepath, "r") as file:
+        data = json.load(file)
+    items = []
+    for template_name, template in data.items():
+        n_of_tags = len(template)
+        items.append(Select.Item(template_name, f"{template_name} ({n_of_tags} tags)"))
+    templates_selector.set(items=items)
+    os.remove(remote_filepath)
+
+
+save_template_button = Button(
+    "save template", button_type="text", icon="zmdi zmdi-save"
+)
+template_name_input = Input(placeholder="Input template name")
+apply_template_button = Button(
+    "apply template", button_type="text", icon="zmdi zmdi-check"
+)
+remove_template_button = Button(
+    "remove template", button_type="text", icon="zmdi zmdi-delete"
+)
+templates_buttons = Container(
+    widgets=[
+        Flexbox(widgets=[save_template_button, template_name_input]),
+        Flexbox(widgets=[apply_template_button, remove_template_button]),
+    ]
+)
+templates_field = Field(
+    title="Templates", content=Container(widgets=[templates_selector, templates_buttons])
+)
+
+# tag inputs
 tag_inputs = [InputTag(tag_meta) for tag_meta in g.tag_metas]
 for tag_input in tag_inputs:
     tag_input.hide()
@@ -87,11 +158,14 @@ save_container = Container(
         Flexbox(widgets=[save_button, save_and_next_button, success_message]),
     ]
 )
-tags_container = Container(widgets=tag_inputs)
+tags_container = Container(widgets=tag_inputs, gap=15)
 tags_card = Card(
-    content=Container(widgets=[tags_container, save_container], gap=40),
+    content=Container(
+        widgets=[templates_field, tags_container, save_container], gap=40
+    ),
     title="Object tags",
 )
+
 
 # labeled image card
 labeled_image = LabeledImage()
@@ -102,21 +176,6 @@ main_window = Container(
     widgets=[labeled_image_card, tags_card], direction="horizontal", fractions=[1, 1]
 )
 main_window_card = Card(title="Edit Tags", content=main_window)
-
-
-def loading(*components):
-    def dec(func):
-        def inner(*args, **kwargs):
-            for component in components:
-                component.loading = True
-            result = func(*args, **kwargs)
-            for component in components:
-                component.loading = False
-            return result
-
-        return inner
-
-    return dec
 
 
 def render_image():
@@ -218,15 +277,15 @@ def save_object_tags():
         return
     if len([ti for ti in tag_inputs if not ti.is_hidden()]) == 0:
         return
-
+    
+    current_label = g.objects[g.current_object_idx]
     updated_tags = sly.TagCollection()
     for tag_input in tag_inputs:
         tag = tag_input.get_tag()
-        if tag is not None:
+        if tag is not None and _is_applicable(tag, current_label):
             updated_tags = updated_tags.add(tag)
-
+    
     # this is needed to keep current order of objects
-    current_label = g.objects[g.current_object_idx]
     for i, label in enumerate(g.current_annotation.labels):
         if label == current_label:
             labels_after_current = g.current_annotation.labels[i + 1 :]
@@ -243,6 +302,8 @@ def save_object_tags():
     g.api.annotation.upload_ann(image_id, g.current_annotation)
     g.objects = g.filter_labels(g.current_annotation.labels)
     render_tags()
+    save_template("last saved")
+    load_templates()
     success_message.show()
 
 
@@ -287,3 +348,83 @@ def save_tags_and_next_obj():
 def go_to_image():
     img_number = input_image_number.get_value() - 1
     select_image(img_number)
+
+
+def save_template(name: str):
+    new_template = {}
+    for tag_input in tag_inputs:
+        tag = tag_input.get_tag()
+        if tag is not None:
+            new_template[tag.meta.name] = tag.to_json()
+    remote_filepath = Path(g.pr_path).joinpath(f"templates.json").as_posix()
+    exists = g.api.file.exists(g.team_id, "/" + remote_filepath)
+    if exists:
+        g.api.file.download(g.team_id, "/" + remote_filepath, remote_filepath)
+        with open(remote_filepath, "r") as file:
+            data = json.load(file)
+            data[name] = new_template
+    else:
+        data = {name: new_template}
+    with open(remote_filepath, "w+") as file:
+        json.dump(data, file)
+    if g.api.file.exists(g.team_id, remote_filepath):
+        g.api.file.remove(g.team_id, remote_filepath)
+    g.api.file.upload(g.team_id, remote_filepath, remote_filepath)
+    os.remove(remote_filepath)
+
+
+def remove_template(name: str):
+    remote_filepath = Path(g.pr_path).joinpath(f"templates.json").as_posix()
+    g.api.file.download(g.team_id, "/" + remote_filepath, remote_filepath)
+    with open(remote_filepath, "r") as file:
+        data = json.load(file)
+        data.pop(name, None)
+    with open(remote_filepath, "w+") as file:
+        json.dump(data, file)
+    if g.api.file.exists(g.team_id, remote_filepath):
+        g.api.file.remove(g.team_id, remote_filepath)
+    g.api.file.upload(g.team_id, remote_filepath, remote_filepath)
+    os.remove(remote_filepath)
+
+
+@loading(tags_card)
+def apply_template(name):
+    remote_filepath = Path(g.pr_path).joinpath(f"templates.json").as_posix()
+    g.api.file.download(g.team_id, "/" + remote_filepath, remote_filepath)
+    with open(remote_filepath, "r") as file:
+        data = json.load(file)
+        for tag_input in tag_inputs:
+            tag_name = tag_input.get_tag_meta().name
+            if tag_name in data[name].keys():
+                tag_json = data[name][tag_name]
+                tag = sly.Tag.from_json(tag_json, g.project_meta.tag_metas)
+                if _is_applicable(tag, g.objects[g.current_object_idx]):
+                    tag_input.set(tag)
+            else:
+                tag_input.set(None)
+    os.remove(remote_filepath)
+
+
+@save_template_button.click
+@loading(templates_field)
+def save_template_click():
+    template_name = template_name_input.get_value()
+    if template_name == "":
+        return
+    save_template(template_name)
+    load_templates()
+
+
+@apply_template_button.click
+@loading(templates_field)
+def apply_template_click():
+    name = templates_selector.get_value()
+    apply_template(name)
+
+
+@remove_template_button.click
+@loading(templates_field)
+def remove_template_click():
+    name = templates_selector.get_value()
+    remove_template(name)
+    load_templates()
