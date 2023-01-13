@@ -32,6 +32,7 @@ classes_selector = ClassesTable(project_id=g.project_id)
 select_classes_button = Button("Select")
 classes_selector_card = Card(
     title="Select Classes",
+    description="Select classes of objects you want to modify"
     content=Container(widgets=[classes_selector, select_classes_button]),
 )
 
