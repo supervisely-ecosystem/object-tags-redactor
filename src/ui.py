@@ -138,10 +138,16 @@ templates_field = Field(
     title="Templates", content=Container(widgets=[templates_selector, templates_buttons])
 )
 
+def get_func(tag_input):
+    def activate_on_change(*args):
+        tag_input.activate()
+    return activate_on_change
+
 # tag inputs
 tag_inputs = [InputTag(tag_meta) for tag_meta in g.tag_metas]
 for tag_input in tag_inputs:
     tag_input.hide()
+    tag_input.value_changed(get_func(tag_input))
 disclaimer = NotificationBox(
     title="Warning",
     description="Objects will be modified in-place!",
