@@ -15,4 +15,5 @@ layout = Container(
 
 app = sly.Application(layout=layout)
 ui.select_image(g.current_image_idx)
+ui.update_pbar(len(g.completed_images))
 ui.load_templates()

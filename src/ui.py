@@ -39,6 +39,7 @@ def loading(*components):
 
     return dec
 
+
 def _is_applicable(tag, label):
     if len(tag.meta.applicable_classes) == 0:
         return True
@@ -89,7 +90,7 @@ next_object_btn = Button(text="", icon="zmdi zmdi-arrow-right")
 prev_object_btn = Button(text="", icon="zmdi zmdi-arrow-left")
 object_buttons = Flexbox(widgets=[prev_object_btn, object_progress, next_object_btn])
 total_image_progress = Progress(message="Images progress", hide_on_finish=False)
-pbar = total_image_progress(total=len(g.images), message="Images progress")
+pbar = total_image_progress(total=g.total_images, message="Images progress")
 
 # object selector card
 buttons = Container(
@@ -100,6 +101,7 @@ object_selector_card = Card(content=Container(widgets=[buttons]), title="Select 
 # tags input card
 # templates
 templates_selector = Select([])
+
 
 @loading(templates_selector)
 def load_templates():
@@ -135,13 +137,17 @@ templates_buttons = Container(
     ]
 )
 templates_field = Field(
-    title="Templates", content=Container(widgets=[templates_selector, templates_buttons])
+    title="Templates",
+    content=Container(widgets=[templates_selector, templates_buttons]),
 )
+
 
 def get_func(tag_input):
     def activate_on_change(*args):
         tag_input.activate()
+
     return activate_on_change
+
 
 # tag inputs
 tag_inputs = [InputTag(tag_meta) for tag_meta in g.tag_metas]
@@ -257,10 +263,6 @@ def render_selected_image():
     image_progress.set(
         f"Image: {g.current_image_idx + 1} / {g.total_images}", status="text"
     )
-    pbar.n = g.current_image_idx + 1
-    pbar.refresh()
-    DataJson()[str(total_image_progress.widget_id)]["status"] = None
-    DataJson().send_changes()
     render_selected_object()
 
 
@@ -283,14 +285,14 @@ def save_object_tags():
         return
     if len([ti for ti in tag_inputs if not ti.is_hidden()]) == 0:
         return
-    
+
     current_label = g.objects[g.current_object_idx]
     updated_tags = sly.TagCollection()
     for tag_input in tag_inputs:
         tag = tag_input.get_tag()
         if tag is not None and _is_applicable(tag, current_label):
             updated_tags = updated_tags.add(tag)
-    
+
     # this is needed to keep current order of objects
     for i, label in enumerate(g.current_annotation.labels):
         if label == current_label:
@@ -307,9 +309,9 @@ def save_object_tags():
     image_id = g.images[g.current_image_idx].id
     g.api.annotation.upload_ann(image_id, g.current_annotation)
     g.objects = g.filter_labels(g.current_annotation.labels)
-    render_tags()
     save_template("last saved")
     load_templates()
+    render_tags()
     success_message.show()
 
 
@@ -330,12 +332,23 @@ def prev_object():
     select_object(g.current_object_idx - 1)
 
 
+def update_pbar(n):
+    pbar.n = n
+    pbar.refresh()
+    DataJson()[str(total_image_progress.widget_id)]["status"] = None
+    DataJson().send_changes()
+
+
 @next_image_button.click
 def next_image():
     if g.current_image_idx >= g.total_images - 1:
         return
     select_image(g.current_image_idx + 1)
-
+    if g.images[g.current_image_idx].id not in g.completed_images:
+        g.completed_images.add(g.images[g.current_image_idx].id)
+        g.save_images_stat()
+        update_pbar(len(g.completed_images))
+    
 
 @prev_image_button.click
 def prev_image():

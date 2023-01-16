@@ -1,4 +1,6 @@
+import json
 import os
+from pathlib import Path
 from typing import List
 from dotenv import load_dotenv
 import supervisely as sly
@@ -30,20 +32,51 @@ tag_metas = [
 ]
 selected_classes = []
 
-images = []
+
+def load_images_stat():
+    remote_filepath = Path(pr_path).joinpath(f"images_stat.json").as_posix()
+    if not api.file.exists(team_id, "/" + remote_filepath):
+        return set()
+    api.file.download(team_id, "/" + remote_filepath, remote_filepath)
+    with open(remote_filepath, "r") as file:
+        data = json.load(file)
+    os.remove(remote_filepath)
+    print(data)
+    return set(data)
+
+
+completed_images = load_images_stat()
+images = 0
 total_images = 0
 current_image_idx = 0
 
 dataset_id = sly.env.dataset_id(raise_not_found=False)
 dataset_info = None
-if dataset_id is None:
-    datasets = api.dataset.get_list(project_id)
-    images = [image for dataset in datasets for image in api.image.get_list(dataset.id)]
+
+
+def load_images():
+    global images
+    global current_image_idx
+    global total_images
+    global dataset_info
+    global completed_images
+    if dataset_id is None:
+        datasets = api.dataset.get_list(project_id)
+        all_images = [
+            image for dataset in datasets for image in api.image.get_list(dataset.id)
+        ]
+    else:
+        dataset_info = api.dataset.get_info_by_id(dataset_id)
+        all_images = api.image.get_list(dataset_id)
+    images = [image for image in all_images if image.id in completed_images]
+    completed_images = set([image.id for image in images])
+    current_image_idx = max(0, len(images))
+    images.extend([image for image in all_images if image.id not in completed_images])
+    current_image_idx = min(current_image_idx, len(images) - 1)
     total_images = len(images)
-else:
-    dataset_info = api.dataset.get_info_by_id(dataset_id)
-    images = api.image.get_list(dataset_id)
-    total_images = len(images)
+
+
+load_images()
 
 current_annotation = None
 objects = []
@@ -92,3 +125,14 @@ def filter_labels(labels: List[sly.Label]):
         if is_selected_class(label.obj_class.name)
         and is_permitted_geometry(label.geometry.geometry_name())
     ]
+
+
+def save_images_stat():
+    remote_filepath = Path(pr_path).joinpath(f"images_stat.json").as_posix()
+    data = list(completed_images)
+    with open(remote_filepath, "w+") as file:
+        json.dump(data, file)
+    if api.file.exists(team_id, remote_filepath):
+        api.file.remove(team_id, remote_filepath)
+    api.file.upload(team_id, remote_filepath, remote_filepath)
+    os.remove(remote_filepath)
