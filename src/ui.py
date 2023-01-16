@@ -106,10 +106,10 @@ templates_selector = Select([])
 @loading(templates_selector)
 def load_templates():
     remote_filepath = Path(g.pr_path).joinpath("templates.json").as_posix()
-    exists = g.api.file.exists(g.team_id, remote_filepath)
+    exists = g.api.file.exists(g.team_id, "/" + remote_filepath)
     if not exists:
         return
-    g.api.file.download(g.team_id, remote_filepath, remote_filepath)
+    g.api.file.download(g.team_id, "/" + remote_filepath, remote_filepath)
     with open(remote_filepath, "r") as file:
         data = json.load(file)
     items = []
@@ -392,9 +392,9 @@ def save_template(name: str):
         if tag is not None:
             new_template[tag.meta.name] = tag.to_json()
     remote_filepath = Path(g.pr_path).joinpath(f"templates.json").as_posix()
-    exists = g.api.file.exists(g.team_id, remote_filepath)
+    exists = g.api.file.exists(g.team_id, "/" + remote_filepath)
     if exists:
-        g.api.file.download(g.team_id, remote_filepath, remote_filepath)
+        g.api.file.download(g.team_id, "/" + remote_filepath, remote_filepath)
         with open(remote_filepath, "r") as file:
             data = json.load(file)
             data[name] = new_template
@@ -410,7 +410,7 @@ def save_template(name: str):
 
 def remove_template(name: str):
     remote_filepath = Path(g.pr_path).joinpath(f"templates.json").as_posix()
-    g.api.file.download(g.team_id, remote_filepath, remote_filepath)
+    g.api.file.download(g.team_id, "/" + remote_filepath, remote_filepath)
     with open(remote_filepath, "r") as file:
         data = json.load(file)
         data.pop(name, None)
@@ -425,7 +425,7 @@ def remove_template(name: str):
 @loading(tags_card)
 def apply_template(name):
     remote_filepath = Path(g.pr_path).joinpath(f"templates.json").as_posix()
-    g.api.file.download(g.team_id, remote_filepath, remote_filepath)
+    g.api.file.download(g.team_id, "/" + remote_filepath, remote_filepath)
     with open(remote_filepath, "r") as file:
         data = json.load(file)
         for tag_input in tag_inputs:
