@@ -54,13 +54,13 @@ if g.dataset_id is None:
     thumbnail = ProjectThumbnail(g.project_info)
 else:
     thumbnail = DatasetThumbnail(g.project_info, g.dataset_info)
-thumbnail_card = Card(title="Input", content=thumbnail)
+thumbnail_card = Card(title="1️⃣ Input", content=thumbnail)
 
 # classes selector
 classes_selector = ClassesTable(project_id=g.project_id)
 select_classes_button = Button("Select")
 classes_selector_card = Card(
-    title="Select Classes",
+    title="2️⃣ Select Classes",
     description="Select classes of objects you want to modify",
     content=Container(widgets=[classes_selector, select_classes_button]),
 )
@@ -73,21 +73,21 @@ def select_classes():
 
 
 # images buttons
-input_image_number = InputNumber(min=1, max=g.total_images)
-select_image_button = Button("Go")
+input_image_number = InputNumber(min=1, max=g.total_images, value=g.current_image_idx + 1)
+select_image_button = Button("Go", button_size="small")
 image_selector = Field(
     title="Go to image",
     content=Flexbox(widgets=[input_image_number, select_image_button]),
 )
 image_progress = Text(f"Image:  0 / 0")
-next_image_button = Button(text="", icon="zmdi zmdi-arrow-right")
-prev_image_button = Button(text="", icon="zmdi zmdi-arrow-left")
+next_image_button = Button(text="", icon="zmdi zmdi-arrow-right", button_size="mini")
+prev_image_button = Button(text="", icon="zmdi zmdi-arrow-left", button_size="mini")
 images_buttons = Flexbox(widgets=[prev_image_button, image_progress, next_image_button])
 
 # objects buttons
 object_progress = Text(f"Obect: 0 / 0")
-next_object_btn = Button(text="", icon="zmdi zmdi-arrow-right")
-prev_object_btn = Button(text="", icon="zmdi zmdi-arrow-left")
+next_object_btn = Button(text="", icon="zmdi zmdi-arrow-right", button_size="mini")
+prev_object_btn = Button(text="", icon="zmdi zmdi-arrow-left", button_size="mini")
 object_buttons = Flexbox(widgets=[prev_object_btn, object_progress, next_object_btn])
 total_image_progress = Progress(message="Images progress", hide_on_finish=False)
 pbar = total_image_progress(total=g.total_images, message="Images progress")
@@ -96,7 +96,7 @@ pbar = total_image_progress(total=g.total_images, message="Images progress")
 buttons = Container(
     widgets=[image_selector, images_buttons, object_buttons, total_image_progress]
 )
-object_selector_card = Card(content=Container(widgets=[buttons]), title="Select Object")
+object_selector_card = Card(content=Container(widgets=[buttons]), title="3️⃣ Select Object", description="Select Image and Object using buttons below")
 
 # tags input card
 # templates
@@ -121,24 +121,36 @@ def load_templates():
 
 
 save_template_button = Button(
-    "save template", button_type="text", icon="zmdi zmdi-save"
+    "Save", button_type="text", icon="zmdi zmdi-save"
+)
+cancel_create_template_button = Button(
+    "Cancel", button_type="text", icon="zmdi zmdi-close"
 )
 template_name_input = Input(placeholder="Input template name")
+create_new_template_button = Button(
+    "Create new", button_type="text", icon="zmdi zmdi-plus"
+)
 apply_template_button = Button(
-    "apply template", button_type="text", icon="zmdi zmdi-check"
+    "Apply template", icon="zmdi zmdi-check"
 )
 remove_template_button = Button(
-    "remove template", button_type="text", icon="zmdi zmdi-delete"
+    "Remove", button_type="text", icon="zmdi zmdi-delete"
 )
-templates_buttons = Container(
+
+apply_template_flexbox = Flexbox(widgets=[templates_selector, create_new_template_button, remove_template_button])
+create_template_flexbox = Flexbox(widgets=[template_name_input, save_template_button, cancel_create_template_button])
+create_template_flexbox.hide()
+templates_container = Container(
     widgets=[
-        Flexbox(widgets=[save_template_button, template_name_input]),
-        Flexbox(widgets=[apply_template_button, remove_template_button]),
+        apply_template_flexbox,
+        create_template_flexbox,
+        apply_template_button,
     ]
 )
 templates_field = Field(
     title="Templates",
-    content=Container(widgets=[templates_selector, templates_buttons]),
+    content=templates_container,
+    description="Edit and apply predefined tags templates"
 )
 
 
@@ -159,10 +171,10 @@ disclaimer = NotificationBox(
     description="Objects will be modified in-place!",
     box_type="warning",
 )
-save_button = Button(text="Save tags")
+save_button = Button(text="Save tags", icon="zmdi zmdi-save")
 success_message = Text("Tags saved!", status="success")
 success_message.hide()
-save_and_next_button = Button(text="Save and next")
+save_and_next_button = Button(text="Save and next", icon="zmdi zmdi-save")
 
 save_container = Container(
     widgets=[
@@ -171,17 +183,19 @@ save_container = Container(
     ]
 )
 tags_container = Container(widgets=tag_inputs, gap=15)
+tags_field = Field(title="Tags", content=tags_container, description="Edit tags")
 tags_card = Card(
     content=Container(
-        widgets=[templates_field, tags_container, save_container], gap=40
+        widgets=[templates_field, tags_field, save_container], gap=40
     ),
-    title="Object tags",
+    title="4️⃣ Edit object tags",
+    description="Edit tags of the selected object"
 )
 
 
 # labeled image card
 labeled_image = LabeledImage()
-labeled_image_card = Card(content=labeled_image, title="Object preview")
+labeled_image_card = Card(content=labeled_image, title="🖼️ Object preview", description="Inspect the select object")
 
 # main window
 main_window = Container(
@@ -275,10 +289,12 @@ def select_object(idx):
 @loading(buttons, labeled_image_card, tags_card)
 def select_image(idx):
     g.current_image_idx = idx
+    input_image_number.value = g.current_image_idx + 1
     g.set_image()
     render_selected_image()
 
 
+@loading(tags_card)
 @save_button.click
 def save_object_tags():
     if g.total_objects == 0:
@@ -424,6 +440,16 @@ def apply_template(name):
     os.remove(remote_filepath)
 
 
+@create_new_template_button.click
+def create_new_template():
+    apply_template_flexbox.hide()
+    create_template_flexbox.show()
+
+@cancel_create_template_button.click
+def cancel_create_new_template():
+    apply_template_flexbox.show()
+    create_template_flexbox.hide()
+
 @save_template_button.click
 @loading(templates_field)
 def save_template_click():
@@ -431,6 +457,7 @@ def save_template_click():
     if template_name == "":
         return
     save_template(template_name)
+    cancel_create_new_template()
     load_templates()
 
 
