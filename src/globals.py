@@ -72,6 +72,7 @@ def load_images():
         all_images = api.image.get_list(dataset_id)
     images = [image for image in all_images if image.id in completed_images]
     completed_images = set([image.id for image in images])
+    print(completed_images)
     current_image_idx = max(0, len(images))
     images.extend([image for image in all_images if image.id not in completed_images])
     current_image_idx = min(current_image_idx, len(images) - 1)
