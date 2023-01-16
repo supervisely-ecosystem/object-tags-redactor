@@ -35,9 +35,9 @@ selected_classes = []
 
 def load_images_stat():
     remote_filepath = Path(pr_path).joinpath(f"images_stat.json").as_posix()
-    if not api.file.exists(team_id, "/" + remote_filepath):
+    if not api.file.exists(team_id, remote_filepath):
         return set()
-    api.file.download(team_id, "/" + remote_filepath, remote_filepath)
+    api.file.download(team_id, remote_filepath, remote_filepath)
     with open(remote_filepath, "r") as file:
         data = json.load(file)
     os.remove(remote_filepath)
