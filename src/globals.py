@@ -25,6 +25,8 @@ project_meta = sly.ProjectMeta.from_json(project_meta_json)
 project_info = api.project.get_info_by_id(project_id)
 app_path = os.path.join(data_dir, "object-tags-editor-files")
 pr_path = os.path.join(app_path, f"project-{project_info.id}")
+if not os.path.exists(pr_path):
+    os.makedirs(pr_path)
 tag_metas = [
     tm
     for tm in project_meta.tag_metas
@@ -35,9 +37,9 @@ selected_classes = []
 
 def load_images_stat():
     remote_filepath = Path(pr_path).joinpath(f"images_stat.json").as_posix()
-    if not api.file.exists(team_id, "/" + remote_filepath):
+    if not api.file.exists(team_id, remote_filepath):
         return set()
-    api.file.download(team_id, "/" + remote_filepath, remote_filepath)
+    api.file.download(team_id, remote_filepath, remote_filepath)
     with open(remote_filepath, "r") as file:
         data = json.load(file)
     os.remove(remote_filepath)
