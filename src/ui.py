@@ -73,9 +73,9 @@ def select_classes():
 
 # images buttons
 input_image_number = InputNumber(min=1, max=g.total_images)
-select_image_button = Button("Select")
+select_image_button = Button("Go")
 image_selector = Field(
-    title="Select image",
+    title="Go to image",
     content=Flexbox(widgets=[input_image_number, select_image_button]),
 )
 image_progress = Text(f"Image:  0 / 0")
