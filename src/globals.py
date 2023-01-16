@@ -26,7 +26,7 @@ project_info = api.project.get_info_by_id(project_id)
 app_path = os.path.join(data_dir, "object-tags-editor-files")
 pr_path = os.path.join(app_path, f"project-{project_info.id}")
 if not os.path.exists(pr_path):
-    os.mkdir(pr_path)
+    os.makedirs(pr_path)
 tag_metas = [
     tm
     for tm in project_meta.tag_metas
