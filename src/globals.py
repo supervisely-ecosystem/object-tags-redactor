@@ -136,5 +136,5 @@ def save_images_stat():
         json.dump(data, file)
     if api.file.exists(team_id, remote_filepath):
         api.file.remove(team_id, remote_filepath)
-    api.file.upload(team_id, remote_filepath, remote_filepath)
+    api.file.upload(team_id, remote_filepath, remote_filepath if remote_filepath.startswith("/") else "/" + remote_filepath)
     os.remove(remote_filepath)

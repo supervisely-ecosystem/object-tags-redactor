@@ -404,7 +404,7 @@ def save_template(name: str):
         json.dump(data, file)
     if g.api.file.exists(g.team_id, remote_filepath):
         g.api.file.remove(g.team_id, remote_filepath)
-    g.api.file.upload(g.team_id, remote_filepath, remote_filepath)
+    g.api.file.upload(g.team_id, remote_filepath, remote_filepath if remote_filepath.startswith("/") else "/" + remote_filepath)
     os.remove(remote_filepath)
 
 
@@ -418,7 +418,7 @@ def remove_template(name: str):
         json.dump(data, file)
     if g.api.file.exists(g.team_id, remote_filepath):
         g.api.file.remove(g.team_id, remote_filepath)
-    g.api.file.upload(g.team_id, remote_filepath, remote_filepath)
+    g.api.file.upload(g.team_id, remote_filepath, remote_filepath if remote_filepath.startswith("/") else "/" + remote_filepath)
     os.remove(remote_filepath)
 
 
