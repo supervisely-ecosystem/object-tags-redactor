@@ -426,6 +426,9 @@ def remove_template(name: str):
 def apply_template(name):
     remote_filepath = Path(g.pr_path).joinpath(f"templates.json").as_posix()
     g.api.file.download(g.team_id, remote_filepath, remote_filepath)
+    if not sly.fs.file_exists(remote_filepath):
+        sly.logger.warn('Error applying template: file not found')
+        return
     with open(remote_filepath, "r") as file:
         data = json.load(file)
         for tag_input in tag_inputs:
