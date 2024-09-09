@@ -468,8 +468,12 @@ def save_template_click():
 @loading(templates_field)
 def apply_template_click():
     name = templates_selector.get_value()
-    if name is not None:
-        apply_template(name)
+    if name is None:
+        from supervisely.app.exceptions import show_dialog
+        sly.logger.warn('Error: invalid template selected, showing dialog window.')
+        show_dialog(title='Error: template not found', description='Please, make sure that the template you have tried to select is valid and try again.', status='error')
+        return
+    apply_template(name)
 
 
 @remove_template_button.click
