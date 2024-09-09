@@ -465,7 +465,8 @@ def save_template_click():
 @loading(templates_field)
 def apply_template_click():
     name = templates_selector.get_value()
-    apply_template(name)
+    if name is not None:
+        apply_template(name)
 
 
 @remove_template_button.click
