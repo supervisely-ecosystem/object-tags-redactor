@@ -471,7 +471,7 @@ def apply_template_click():
     if name is None:
         from supervisely.app.exceptions import show_dialog
         sly.logger.warn('Error: invalid template selected, showing dialog window.')
-        show_dialog(title='Error: template not found', description='Please, make sure that the template you have tried to select is valid and try again.', status='error')
+        show_dialog(title='Error: template not found', description='Please, make sure that the template you have tried to apply is valid and try again.', status='warning')
         return
     apply_template(name)
 
