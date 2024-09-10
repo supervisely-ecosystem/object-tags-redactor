@@ -117,6 +117,8 @@ def load_templates():
         n_of_tags = len(template)
         items.append(Select.Item(template_name, f"{template_name} ({n_of_tags} tags)"))
     templates_selector.set(items=items)
+    if len(items) == 0:
+        apply_template_button.disable()
     os.remove(remote_filepath)
 
 
@@ -439,7 +441,6 @@ def apply_template(name):
                 tag_input.set(None)
     os.remove(remote_filepath)
 
-
 @create_new_template_button.click
 def create_new_template():
     apply_template_flexbox.hide()
@@ -460,12 +461,23 @@ def save_template_click():
     cancel_create_new_template()
     load_templates()
 
+@templates_selector.value_changed
+def templates_selector_cb(value):
+    if value:
+        apply_template_button.enable()
+    else:
+        apply_template_button.disable()
 
 @apply_template_button.click
 @loading(templates_field)
 def apply_template_click():
     name = templates_selector.get_value()
-    apply_template(name)
+    try:
+        apply_template(name)
+    except:
+        from supervisely.app.exceptions import show_dialog
+        sly.logger.warn('Error: invalid template selected, showing dialog window.', extra={'template name': name})
+        show_dialog(title='Error: file not found', description='Please, make sure that the template you have tried to apply exists and try again.', status='warning')
 
 
 @remove_template_button.click
