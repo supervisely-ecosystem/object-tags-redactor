@@ -428,11 +428,6 @@ def remove_template(name: str):
 def apply_template(name):
     remote_filepath = Path(g.pr_path).joinpath(f"templates.json").as_posix()
     g.api.file.download(g.team_id, remote_filepath, remote_filepath)
-    if not sly.fs.file_exists(remote_filepath):
-        from supervisely.app.exceptions import show_dialog
-        sly.logger.warn('Error: invalid template selected, showing dialog window.', extra={'file path': remote_filepath})
-        show_dialog(title='Error: file not found', description='Please, make sure that the template you have tried to apply exists and try again.', status='warning')
-        return
     with open(remote_filepath, "r") as file:
         data = json.load(file)
         for tag_input in tag_inputs:
@@ -445,7 +440,6 @@ def apply_template(name):
             else:
                 tag_input.set(None)
     os.remove(remote_filepath)
-
 
 @create_new_template_button.click
 def create_new_template():
@@ -478,7 +472,12 @@ def templates_selector_cb(value):
 @loading(templates_field)
 def apply_template_click():
     name = templates_selector.get_value()
-    apply_template(name)
+    try:
+        apply_template(name)
+    except:
+        from supervisely.app.exceptions import show_dialog
+        sly.logger.warn('Error: invalid template selected, showing dialog window.', extra={'template name': name})
+        show_dialog(title='Error: file not found', description='Please, make sure that the template you have tried to apply exists and try again.', status='warning')
 
 
 @remove_template_button.click
