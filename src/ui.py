@@ -135,7 +135,6 @@ create_new_template_button = Button(
 apply_template_button = Button(
     "Apply template", icon="zmdi zmdi-check"
 )
-apply_template_button.disable()
 remove_template_button = Button(
     "Remove", button_type="text", icon="zmdi zmdi-delete"
 )
