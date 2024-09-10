@@ -117,6 +117,8 @@ def load_templates():
         n_of_tags = len(template)
         items.append(Select.Item(template_name, f"{template_name} ({n_of_tags} tags)"))
     templates_selector.set(items=items)
+    if len(items) == 0:
+        apply_template_button.disable()
     os.remove(remote_filepath)
 
 
@@ -133,6 +135,7 @@ create_new_template_button = Button(
 apply_template_button = Button(
     "Apply template", icon="zmdi zmdi-check"
 )
+apply_template_button.disable()
 remove_template_button = Button(
     "Remove", button_type="text", icon="zmdi zmdi-delete"
 )
@@ -427,7 +430,9 @@ def apply_template(name):
     remote_filepath = Path(g.pr_path).joinpath(f"templates.json").as_posix()
     g.api.file.download(g.team_id, remote_filepath, remote_filepath)
     if not sly.fs.file_exists(remote_filepath):
-        sly.logger.warn('Error applying template: file not found')
+        from supervisely.app.exceptions import show_dialog
+        sly.logger.warn('Error: invalid template selected, showing dialog window.', extra={'file path': remote_filepath})
+        show_dialog(title='Error: file not found', description='Please, make sure that the template you have tried to apply exists and try again.', status='warning')
         return
     with open(remote_filepath, "r") as file:
         data = json.load(file)
@@ -463,16 +468,17 @@ def save_template_click():
     cancel_create_new_template()
     load_templates()
 
+@templates_selector.value_changed
+def templates_selector_cb(value):
+    if value:
+        apply_template_button.enable()
+    else:
+        apply_template_button.disable()
 
 @apply_template_button.click
 @loading(templates_field)
 def apply_template_click():
     name = templates_selector.get_value()
-    if name is None:
-        from supervisely.app.exceptions import show_dialog
-        sly.logger.warn('Error: invalid template selected, showing dialog window.')
-        show_dialog(title='Error: template not found', description='Please, make sure that the template you have tried to apply is valid and try again.', status='warning')
-        return
     apply_template(name)
 
 
